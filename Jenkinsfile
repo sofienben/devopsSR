@@ -13,15 +13,12 @@ pipeline {
                 sh 'mvn clean compile'
             }
         }
-        stage('Unit Test: Mockito') {
-            steps {
-                sh 'mvn clean install -DskipTests'
-            }
-        }
 
         stage('Unit Test: Mockito, Junit') {
             steps {
+                sh 'mvn clean install -DskipTests'
                 sh 'mvn -X test'
+                
             }
         }
 
