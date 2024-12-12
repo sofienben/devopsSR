@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout: GitHub') {
+        stage('GitHub') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Compile: Maven') {
+        stage('Maven') {
             steps {
                 sh 'mvn clean compile'
             }
@@ -20,7 +20,7 @@ pipeline {
 //             }
 //         }
 
-        stage('Static Test: SonarQube') {
+        stage('SonarQube') {
             steps {
                 withSonarQubeEnv(installationName :'sq1') {
                     sh 'mvn sonar:sonar'
@@ -36,7 +36,7 @@ pipeline {
         //     }
         // }
 
-        stage('Build Image: Docker') {
+        stage('Build Docker Image') {
             steps {
                 script {
                     sh 'mvn package'
@@ -45,7 +45,7 @@ pipeline {
             }
         }
 
-        stage('Push Image: DockerHub') {
+        stage('Push to  DockerHub') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
@@ -56,7 +56,7 @@ pipeline {
             }
         }
 
-        stage('Deploy: Docker Compose') {
+        stage('Docker Compose') {
             steps {
                 script {
                     sh 'docker compose up -d'
