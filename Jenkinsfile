@@ -28,13 +28,13 @@ pipeline {
             }
         }
 
-        // stage('Pre-Deploy: Nexus') {
-        //     steps {
-        //         withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-        //             sh 'mvn deploy -e -X -Dnexus.login=$NEXUS_USER -Dnexus.password=$NEXUS_PASS -DskipTests'
-        //         }
-        //     }
-        // }
+        stage('Pre-Deploy: Nexus') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh 'mvn deploy -e -X -Dnexus.login=$NEXUS_USER -Dnexus.password=$NEXUS_PASS -DskipTests'
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
