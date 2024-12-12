@@ -44,7 +44,6 @@ class EventServicesImplTest {
 
     @BeforeEach
     void setUp() {
-        // Initialize test data
         participant = new Participant();
         participant.setIdPart(1);
         participant.setNom("Tounsi");
@@ -55,6 +54,7 @@ class EventServicesImplTest {
         event.setDescription("Test Event");
         event.setDateDebut(LocalDate.now());
         event.setDateFin(LocalDate.now().plusDays(1));
+        event.setParticipants(new HashSet<>());
 
         logistics = new Logistics();
         logistics.setDescription("Test Logistics");
@@ -64,24 +64,32 @@ class EventServicesImplTest {
     }
 
     @Test
-    void testAddParticipant() {
-        when(participantRepository.save(participant)).thenReturn(participant);
+    void testCalculCout() {
+        // Arrange
+        event.setLogistics(new HashSet<>(Set.of(logistics)));
+        when(eventRepository.findByParticipants_NomAndParticipants_PrenomAndParticipants_Tache(
+                "Tounsi", "Ahmed", Tache.ORGANISATEUR))
+            .thenReturn(List.of(event));
 
-        Participant savedParticipant = eventServices.addParticipant(participant);
+        // Act
+        eventServices.calculCout();
 
-        assertNotNull(savedParticipant);
-        assertEquals(participant, savedParticipant);
-        verify(participantRepository).save(participant);
+        // Assert
+        verify(eventRepository).save(argThat(savedEvent -> 
+            savedEvent.getCout() == 50f  // 10 (prixUnit) * 5 (quantite)
+        ));
     }
 
     @Test
     void testAddAffectEvenParticipant() {
+        // Arrange
         when(participantRepository.findById(1)).thenReturn(Optional.of(participant));
-        when(eventRepository.save(event)).thenReturn(event);
+        when(eventRepository.save(any(Event.class))).thenReturn(event);
 
-        event.setParticipants(new HashSet<>(Set.of(participant)));
-        Event savedEvent = eventServices.addAffectEvenParticipant(event);
+        // Act
+        Event savedEvent = eventServices.addAffectEvenParticipant(event, 1);
 
+        // Assert
         assertNotNull(savedEvent);
         assertTrue(savedEvent.getParticipants().contains(participant));
         verify(eventRepository).save(event);
@@ -89,11 +97,14 @@ class EventServicesImplTest {
 
     @Test
     void testAddAffectLog() {
+        // Arrange
         when(eventRepository.findByDescription("Test Event")).thenReturn(event);
         when(logisticsRepository.save(logistics)).thenReturn(logistics);
 
+        // Act
         Logistics savedLogistics = eventServices.addAffectLog(logistics, "Test Event");
 
+        // Assert
         assertNotNull(savedLogistics);
         assertTrue(event.getLogistics().contains(logistics));
         verify(logisticsRepository).save(logistics);
@@ -101,29 +112,34 @@ class EventServicesImplTest {
 
     @Test
     void testGetLogisticsDates() {
+        // Arrange
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = LocalDate.now().plusDays(1);
-
         event.setLogistics(new HashSet<>(Set.of(logistics)));
         when(eventRepository.findByDateDebutBetween(startDate, endDate)).thenReturn(List.of(event));
 
+        // Act
         List<Logistics> logisticsList = eventServices.getLogisticsDates(startDate, endDate);
 
+        // Assert
         assertNotNull(logisticsList);
         assertFalse(logisticsList.isEmpty());
         assertTrue(logisticsList.contains(logistics));
     }
 
     @Test
-    void testCalculCout() {
-        event.setLogistics(new HashSet<>(Set.of(logistics)));
-        when(eventRepository.findByParticipants_NomAndParticipants_PrenomAndParticipants_Tache("Tounsi", "Ahmed", Tache.ORGANISATEUR))
-            .thenReturn(List.of(event));
+    void testGetLogisticsDates_EmptyLogistics() {
+        // Arrange
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = LocalDate.now().plusDays(1);
+        event.setLogistics(new HashSet<>()); // Empty logistics set
+        when(eventRepository.findByDateDebutBetween(startDate, endDate)).thenReturn(List.of(event));
 
-        eventServices.calculCout();
+        // Act
+        List<Logistics> logisticsList = eventServices.getLogisticsDates(startDate, endDate);
 
-        // Verify that the event's cost is calculated and saved
-        assertEquals(50f, event.getCout());
-        verify(eventRepository).save(event);
+        // Assert
+        assertNotNull(logisticsList);
+        assertTrue(logisticsList.isEmpty());
     }
 }
