@@ -24,7 +24,7 @@ services:
         "spring.datasource.username" : "root",
         "spring.datasource.password" : "sofien",
         "spring.jpa.properties.hibernate.dialect" : "org.hibernate.dialect.MySQL5InnoDBDialect",
-        "spring.jpa.hibernate.ddl-auto" : "update"
+        "spring.jpa.hibernate.ddl-auto" : "none"
       }'
     stdin_open: true
     tty: true
