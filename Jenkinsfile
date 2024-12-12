@@ -16,9 +16,7 @@ pipeline {
 
         stage('Unit Test: Mockito, Junit') {
             steps {
-                sh 'mvn clean install -DskipTests'
-                sh 'mvn -X test'
-                
+                sh 'mvn clean test'
             }
         }
 
