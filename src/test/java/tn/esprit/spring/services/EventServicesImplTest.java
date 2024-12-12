@@ -16,9 +16,11 @@ import tn.esprit.eventsproject.repositories.ParticipantRepository;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +44,7 @@ class EventServicesImplTest {
 
     @BeforeEach
     void setUp() {
+        // Initialize test data
         participant = new Participant();
         participant.setIdPart(1);
         participant.setNom("Tounsi");
@@ -52,7 +55,6 @@ class EventServicesImplTest {
         event.setDescription("Test Event");
         event.setDateDebut(LocalDate.now());
         event.setDateFin(LocalDate.now().plusDays(1));
-        event.setParticipants(new HashSet<>());
 
         logistics = new Logistics();
         logistics.setDescription("Test Logistics");
@@ -63,79 +65,65 @@ class EventServicesImplTest {
 
     @Test
     void testAddParticipant() {
-        // Simuler l'ajout d'un participant
         when(participantRepository.save(participant)).thenReturn(participant);
 
-        // Appeler la méthode
-        eventServices.addParticipant(participant);
+        Participant savedParticipant = eventServices.addParticipant(participant);
 
-        // Vérifier que la méthode `save` du repository a été appelée
+        assertNotNull(savedParticipant);
+        assertEquals(participant, savedParticipant);
         verify(participantRepository).save(participant);
     }
 
     @Test
     void testAddAffectEvenParticipant() {
-        // Simuler la recherche d'un participant par ID
         when(participantRepository.findById(1)).thenReturn(Optional.of(participant));
-        when(eventRepository.save(any(Event.class))).thenReturn(event);
+        when(eventRepository.save(event)).thenReturn(event);
 
-        // Appeler la méthode
-        eventServices.addAffectEvenParticipant(event, 1);
+        event.setParticipants(new HashSet<>(Set.of(participant)));
+        Event savedEvent = eventServices.addAffectEvenParticipant(event);
 
-        // Vérifier les interactions
-        verify(participantRepository).findById(1);
+        assertNotNull(savedEvent);
+        assertTrue(savedEvent.getParticipants().contains(participant));
         verify(eventRepository).save(event);
     }
 
     @Test
     void testAddAffectLog() {
-        // Simuler la recherche d'un événement et l'enregistrement de la logistique
         when(eventRepository.findByDescription("Test Event")).thenReturn(event);
         when(logisticsRepository.save(logistics)).thenReturn(logistics);
 
-        // Appeler la méthode
-        eventServices.addAffectLog(logistics, "Test Event");
+        Logistics savedLogistics = eventServices.addAffectLog(logistics, "Test Event");
 
-        // Vérifier les interactions
-        verify(eventRepository).findByDescription("Test Event");
+        assertNotNull(savedLogistics);
+        assertTrue(event.getLogistics().contains(logistics));
         verify(logisticsRepository).save(logistics);
     }
 
     @Test
     void testGetLogisticsDates() {
-        // Définir une plage de dates
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = LocalDate.now().plusDays(1);
 
-        // Ajouter de la logistique à l'événement
         event.setLogistics(new HashSet<>(Set.of(logistics)));
+        when(eventRepository.findByDateDebutBetween(startDate, endDate)).thenReturn(List.of(event));
 
-        // Simuler la recherche d'événements dans une plage de dates
-        when(eventRepository.findByDateDebutBetween(startDate, endDate)).thenReturn(Set.of(event));
+        List<Logistics> logisticsList = eventServices.getLogisticsDates(startDate, endDate);
 
-        // Appeler la méthode
-        eventServices.getLogisticsDates(startDate, endDate);
-
-        // Vérifier les interactions
-        verify(eventRepository).findByDateDebutBetween(startDate, endDate);
+        assertNotNull(logisticsList);
+        assertFalse(logisticsList.isEmpty());
+        assertTrue(logisticsList.contains(logistics));
     }
 
     @Test
     void testCalculCout() {
-        // Ajouter de la logistique à l'événement
         event.setLogistics(new HashSet<>(Set.of(logistics)));
+        when(eventRepository.findByParticipants_NomAndParticipants_PrenomAndParticipants_Tache("Tounsi", "Ahmed", Tache.ORGANISATEUR))
+            .thenReturn(List.of(event));
 
-        // Simuler la recherche d'événements avec un participant spécifique
-        when(eventRepository.findByParticipants_NomAndParticipants_PrenomAndParticipants_Tache(
-                "Tounsi", "Ahmed", Tache.ORGANISATEUR))
-            .thenReturn(Set.of(event));
-
-        // Appeler la méthode
         eventServices.calculCout();
 
-        // Vérifier que l'événement est enregistré avec le coût mis à jour
-        verify(eventRepository).save(argThat(savedEvent -> 
-            savedEvent.getCout() == 50f  // 10 (prixUnit) * 5 (quantite)
-        ));
+        // Verify that the event's cost is calculated and saved
+        assertEquals(50f, event.getCout());
+        verify(eventRepository).save(event);
     }
 }
