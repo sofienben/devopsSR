@@ -14,11 +14,7 @@ pipeline {
             }
         }
 
-        stage('Unit Test: Mockito, Junit') {
-            steps {
-                sh 'mvn clean test'
-            }
-        }
+
 
         stage('SonarQube') {
             steps {
@@ -61,6 +57,11 @@ pipeline {
                 script {
                     sh 'docker compose up -d'
                 }
+            }
+        }
+        stage('Unit Test: Mockito, Junit') {
+            steps {
+                sh 'mvn clean test'
             }
         }
     }
