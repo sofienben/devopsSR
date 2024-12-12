@@ -16,13 +16,13 @@ pipeline {
 
 
 
-        stage('SonarQube') {
-            steps {
-                withSonarQubeEnv(installationName :'sq1') {
-                    sh 'mvn sonar:sonar'
-                }
-            }
-        }
+        // stage('SonarQube') {
+        //     steps {
+        //         withSonarQubeEnv(installationName :'sq1') {
+        //             sh 'mvn sonar:sonar'
+        //         }
+        //     }
+        // }
 
         stage('Pre-Deploy: Nexus') {
             steps {
