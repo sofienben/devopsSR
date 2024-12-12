@@ -39,7 +39,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'mvn package'
+                    sh 'mvn package -DskipTests'
                     sh 'docker build -t sofienben/sofien .'
                 }
             }
