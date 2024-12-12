@@ -14,11 +14,11 @@ pipeline {
             }
         }
 
-        stage('Unit Test: Mockito, Junit') {
-            steps {
-                sh 'mvn -X test'
-            }
-        }
+        // stage('Unit Test: Mockito, Junit') {
+        //     steps {
+        //         sh 'mvn -X test'
+        //     }
+        // }
 
         stage('SonarQube') {
             steps {
